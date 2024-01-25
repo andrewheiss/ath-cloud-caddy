@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  caddy:
+    # This could just be the image here, but for wildcard domains to work, 
+    # Let's Encrypt needs fancy API access to do some DNS magic, so I use a 
+    # custom Dockerfile that builds the caddy binary with a DigitalOcean DNS module
+    # image: caddy:2-alpine
+    build:
+      dockerfile: "./dockerfiles/caddy-do.dockerfile"
+    ports:
+      - 80:80
+      - 443:443
+
+    volumes:
+      - "../sites/:/var/www/html/:ro"
+      - "./caddyfile-dev/:/etc/caddy/"  # Switch to ./caddyfile-prod for production
+
+      # Caddy needs to mount /data and /config for persisted data
+      - "./caddy_data/:/data/"
+      - "./caddy_config/:/config/"
+
+    env_file:
+      - "digitalocean.env"
+    depends_on:
+      - "php"
+  
+  php:
+    build:
+      dockerfile: "./dockerfiles/php.dockerfile"
+    volumes:
+      - "../sites/:/var/www/html/:ro"
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb
+    env_file:
+      - "db.env"
+    volumes:
+      - "./db/mariadb:/var/lib/mysql"

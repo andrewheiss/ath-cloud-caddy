@@ -1,0 +1,33 @@
+{
+	email andrew@andrewheiss.com
+	
+	# Specify DigitalOcean DNS API thing here so it works server-wide
+	# https://caddy.community/t/how-to-use-dns-provider-modules-in-caddy-2/8148
+	acme_dns digitalocean {env.DO_API_TOKEN}
+}
+
+# Bare domain goes to www
+andrewheiss.com {
+    redir https://www.{host}{uri}
+}
+
+www.andrewheiss.com {
+    root * /var/www/html/andrewheiss.com
+	encode gzip
+    file_server
+}
+
+# Wildcard domains for classes
+*.classes.andrewheiss.com {
+	@evalsp24 host evalsp24.classes.andrewheiss.com 
+	handle @evalsp24 {
+		root * /var/www/html/classes/evalsp24/public
+		file_server
+	}
+
+	@datavizf23 host datavizf23.classes.andrewheiss.com 
+	handle @datavizf23 {
+		root * /var/www/html/classes/datavizf23/public_html
+		file_server
+	}
+}
